@@ -51,7 +51,7 @@ module Dry
       #
       # @api public
       def validate(*macros, &block)
-        @macros = parse_macros(*macros)
+        @macros = macros
         @block = block if block
         self
       end
@@ -77,7 +77,6 @@ module Dry
       # rubocop:disable Metrics/AbcSize
       def each(*macros, &block)
         root = keys[0]
-        macros = parse_macros(*macros)
         @keys = []
 
         @block = proc do
@@ -107,28 +106,6 @@ module Dry
       # @api public
       def inspect
         %(#<#{self.class} keys=#{keys.inspect}>)
-      end
-
-      # Parse function arguments into macros structure
-      #
-      # @return [Array]
-      #
-      # @api private
-      def parse_macros(*args)
-        args.each_with_object([]) do |spec, macros|
-          case spec
-          when Hash
-            add_macro_from_hash(macros, spec)
-          else
-            macros << Array(spec)
-          end
-        end
-      end
-
-      def add_macro_from_hash(macros, spec)
-        spec.each do |k, v|
-          macros << [k, v.is_a?(Array) ? v : [v]]
-        end
       end
     end
   end

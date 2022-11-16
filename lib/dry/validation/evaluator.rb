@@ -74,7 +74,18 @@ module Dry
           instance_exec(**exec_opts, &block)
         end
 
-        macros.each do |args|
+        validate(*macros)
+      end
+
+      # Executes the specified macros in the rule context
+      #
+      # @param [Array<Symbol>]
+      #
+      # @return
+      #
+      # @api public
+      def validate(*macros)
+        parse_macros(macros).each do |args|
           macro = macro(*args.flatten(1))
           instance_exec(**macro.extract_block_options(_options.merge(macro: macro)), &macro.block)
         end
@@ -204,6 +215,28 @@ module Dry
       # @api public
       def base_rule_error?
         !base.empty? || result.base_rule_error?
+      end
+
+      # Parse function arguments into macros structure
+      #
+      # @return [Array]
+      #
+      # @api private
+      def parse_macros(*args)
+        args.each_with_object([]) do |spec, macros|
+          case spec
+          when Hash
+            add_macro_from_hash(macros, spec)
+          else
+            macros << Array(spec)
+          end
+        end
+      end
+
+      def add_macro_from_hash(macros, spec)
+        spec.each do |k, v|
+          macros << [k, v.is_a?(Array) ? v : [v]]
+        end
       end
 
       # @api private
